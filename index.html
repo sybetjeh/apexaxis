@@ -7,7 +7,9 @@
     <meta name="description" content="ApexAxis is no longer operating publicly. We've gone private and closed-source. Contact us if you wish to continue using our services.">
     <meta property="og:title" content="ApexAxis - Notice">
     <meta property="og:description" content="ApexAxis is no longer operating publicly. We've gone private and closed-source. Contact us if you wish to continue using our services.">
+    <meta property="og:image" content="https://yourimageurl.com/image.jpg">
     <meta property="og:url" content="https://manage.apexaxis.nl">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
         body {
             background-color: #121212;
@@ -81,13 +83,28 @@
             display: none;
             color: #BB86FC;
         }
+        .error {
+            margin-top: 20px;
+            display: none;
+            color: #e63946;
+        }
     </style>
     <script>
         function handleFormSubmit(event) {
             event.preventDefault();
+            
             const confirmationMessage = document.querySelector('.confirmation');
-            confirmationMessage.style.display = 'block';
-
+            const errorMessage = document.querySelector('.error');
+            const lastSubmitTime = localStorage.getItem('lastSubmitTime');
+            const currentTime = new Date().getTime();
+            
+            if (lastSubmitTime && (currentTime - lastSubmitTime < 5 * 60 * 1000)) { // 5 minutes in milliseconds
+                errorMessage.textContent = 'You can only submit once every 5 minutes. Please try again later.';
+                errorMessage.style.display = 'block';
+                confirmationMessage.style.display = 'none';
+                return;
+            }
+            
             const formData = new FormData(event.target);
             fetch('https://formsubmit.co/dc4bf9fc58a24036a1fdd13257f11e11', {
                 method: 'POST',
@@ -98,11 +115,18 @@
             }).then(response => {
                 if (response.ok) {
                     confirmationMessage.textContent = 'Your request has been sent successfully.';
+                    confirmationMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    localStorage.setItem('lastSubmitTime', currentTime);
                 } else {
-                    confirmationMessage.textContent = 'There was an error sending your request. Please try again.';
+                    errorMessage.textContent = 'There was an error sending your request. Please try again.';
+                    errorMessage.style.display = 'block';
+                    confirmationMessage.style.display = 'none';
                 }
             }).catch(error => {
-                confirmationMessage.textContent = 'There was an error sending your request. Please try again.';
+                errorMessage.textContent = 'There was an error sending your request. Please try again.';
+                errorMessage.style.display = 'block';
+                confirmationMessage.style.display = 'none';
             });
         }
     </script>
@@ -124,6 +148,7 @@
             <button type="submit">Submit</button>
         </form>
         <div class="confirmation">Your request has been sent successfully.</div>
+        <div class="error"></div>
     </div>
 </body>
 </html>
